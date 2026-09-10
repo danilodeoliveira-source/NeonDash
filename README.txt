@@ -1,16 +1,9 @@
-NEON RUSH V3 — STEREO FLOW
+NEON RUSH V6 FINAL
 
-Esta versão usa como referência de design a sensação de um platformer rítmico de rolagem lateral: movimento automático, saltos cronometrados, espinhos, plataformas, coletáveis, portais e uma seção de voo.
+Fluxo: menu -> seleção de fases -> jogo.
+Controles: Espaço/W/seta para cima/clique. Segurar mantém o auto-pulo ao tocar o chão.
+Dash: Shift ou X.
+Pausa: Esc ou botão no canto superior.
+Reinício: R.
 
-Referência indicada pelo autor do projeto:
-Geometry Dash — Level 1: Stereo Madness (All Coins)
-https://www.youtube.com/watch?v=HW41UNolUec
-
-O jogo usa identidade visual, nomes, fases, personagens e música originais. Não inclui assets ou a música do jogo de referência.
-
-CONTROLES
-- Espaço / W / seta para cima: pular
-- Manter pressionado: controlar a nave na seção de voo
-- R: reiniciar
-- ESC: pausar
-- Mouse/toque: pular
+Fase 1 foi desenhada manualmente com janelas largas e testada por simulação determinística de física.
