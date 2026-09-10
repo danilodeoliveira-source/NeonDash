@@ -1,30 +1,16 @@
-NEON RUSH — Rhythm Runner
+NEON RUSH V3 — STEREO FLOW
 
-Jogo original de plataforma rítmica inspirado na ideia de jogos de reação em alta velocidade.
-Não usa personagens, músicas, fases ou assets de franquias existentes.
+Esta versão usa como referência de design a sensação de um platformer rítmico de rolagem lateral: movimento automático, saltos cronometrados, espinhos, plataformas, coletáveis, portais e uma seção de voo.
 
-ARQUIVOS
-- index.html — interface e telas
-- style.css — layout responsivo
-- game.js — motor, fases, física, colisão, HUD, progresso e áudio sintético
+Referência indicada pelo autor do projeto:
+Geometry Dash — Level 1: Stereo Madness (All Coins)
+https://www.youtube.com/watch?v=HW41UNolUec
 
-COMO RODAR
-1. Extraia a pasta.
-2. Abra index.html em um navegador moderno.
-3. Para publicar em GitHub Pages, suba os arquivos e deixe index.html na raiz.
+O jogo usa identidade visual, nomes, fases, personagens e música originais. Não inclui assets ou a música do jogo de referência.
 
 CONTROLES
-- Espaço / W / seta para cima / toque / clique: pular
-- Shift / X: dash
+- Espaço / W / seta para cima: pular
+- Manter pressionado: controlar a nave na seção de voo
 - R: reiniciar
-- Esc: pausar
-
-SISTEMAS
-- 6 fases originais
-- seleção de fases e desbloqueio progressivo
-- save localStorage
-- moedas e pontuação
-- portais de gravidade e velocidade
-- obstáculos, partículas e screen shake
-- configurações de efeitos
-- áudio gerado no navegador, sem arquivos externos
+- ESC: pausar
+- Mouse/toque: pular

@@ -1,55 +1,68 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>NEON RUSH — Rhythm Runner</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NEON RUSH — V2</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="gameRoot">
-    <section id="menu" class="screen active">
-      <div class="brand-wrap">
-        <div class="brand">NEON RUSH</div>
-        <div class="tagline">RHYTHM • SPEED • REACTION</div>
-      </div>
-      <div class="menu-panel">
-        <button class="menu-btn primary" data-action="play">JOGAR</button>
-        <button class="menu-btn" data-action="levels">SELECIONAR FASE</button>
-        <button class="menu-btn" data-action="settings">CONFIGURAÇÕES</button>
-      </div>
-      <div class="menu-tip">ESPAÇO / CLIQUE / TOQUE = PULAR • SHIFT = DASH • R = REINICIAR</div>
-    </section>
+<div id="app">
+  <section id="screen-menu" class="screen active">
+    <div class="menu-bg"></div>
+    <div class="logo-block">
+      <div class="logo">NEON <span>RUSH</span></div>
+      <div class="logo-sub">SPEED // REACTION // RHYTHM</div>
+    </div>
+    <div class="main-menu">
+      <button class="btn btn-main" data-action="play">JOGAR</button>
+      <button class="btn" data-action="levels">FASES</button>
+      <button class="btn" data-action="settings">CONFIGURAÇÕES</button>
+    </div>
+    <div class="menu-footer">ESPAÇO / W / CLIQUE = PULAR • SHIFT / X = DASH • R = REINICIAR • ESC = PAUSAR</div>
+  </section>
 
-    <section id="levels" class="screen hidden">
-      <header class="page-head"><button class="back" data-action="menu">← MENU</button><div><div class="eyebrow">NEON RUSH</div><h1>SELECIONAR FASE</h1></div><div class="best" id="bestSummary"></div></header>
-      <div id="levelGrid" class="level-grid"></div>
-    </section>
+  <section id="screen-levels" class="screen hidden">
+    <header class="page-header">
+      <button class="back" data-action="menu">← VOLTAR</button>
+      <div><div class="micro">NEON RUSH</div><h1>SELECIONE SUA CORRIDA</h1></div>
+      <div id="progressSummary" class="summary"></div>
+    </header>
+    <div id="levelGrid" class="level-grid"></div>
+  </section>
 
-    <section id="settings" class="screen hidden">
-      <header class="page-head"><button class="back" data-action="menu">← MENU</button><div><div class="eyebrow">NEON RUSH</div><h1>CONFIGURAÇÕES</h1></div><div></div></header>
-      <div class="settings-panel">
-        <label>VOLUME <input id="volumeSlider" type="range" min="0" max="1" step="0.05" value="0.35"></label>
-        <label>EFEITOS <input id="sfxToggle" type="checkbox" checked></label>
-        <label>PARTÍCULAS <input id="particlesToggle" type="checkbox" checked></label>
-        <label>EFEITO DE TELA <input id="shakeToggle" type="checkbox" checked></label>
-        <button class="menu-btn" data-action="resetSave">RESETAR PROGRESSO</button>
-      </div>
-    </section>
+  <section id="screen-settings" class="screen hidden">
+    <header class="page-header">
+      <button class="back" data-action="menu">← VOLTAR</button>
+      <div><div class="micro">NEON RUSH</div><h1>CONFIGURAÇÕES</h1></div><div></div>
+    </header>
+    <div class="settings-card">
+      <label>VOLUME <input id="volume" type="range" min="0" max="1" step="0.05"></label>
+      <label>EFEITOS SONOROS <input id="sfx" type="checkbox"></label>
+      <label>PARTÍCULAS <input id="particles" type="checkbox"></label>
+      <label>EFEITO DE IMPACTO <input id="shake" type="checkbox"></label>
+      <button class="btn danger" data-action="reset">APAGAR PROGRESSO</button>
+    </div>
+  </section>
 
-    <section id="game" class="screen hidden game-screen">
-      <canvas id="canvas" aria-label="Neon Rush"></canvas>
-      <div class="hud">
-        <div class="hud-left"><div id="levelLabel">FASE 1 — PULSO ZERO</div><div class="bar"><i id="progressBar"></i></div></div>
-        <div class="hud-center" id="progressText">0%</div>
-        <div class="hud-right"><span>◆ <b id="coinHud">0</b></span><span>★ <b id="scoreHud">0</b></span><button class="pause-btn" data-action="pause">Ⅱ</button></div>
-      </div>
-      <div id="gameMessage" class="game-message hidden"></div>
-      <div id="pauseOverlay" class="overlay hidden">
-        <div class="overlay-card"><div class="eyebrow">NEON RUSH</div><h2>PAUSADO</h2><button class="menu-btn primary" data-action="resume">CONTINUAR</button><button class="menu-btn" data-action="restart">REINICIAR</button><button class="menu-btn" data-action="levels">SAIR PARA FASES</button></div>
-      </div>
-    </section>
-  </div>
-  <script src="game.js"></script>
+  <section id="screen-game" class="screen hidden game-screen">
+    <canvas id="canvas"></canvas>
+    <div class="hud">
+      <div class="hud-title" id="levelTitle">FASE 1 — PULSO ZERO</div>
+      <div class="progress-wrap"><div class="progress-track"><i id="progressFill"></i></div></div>
+      <div class="hud-progress" id="progressText">0%</div>
+      <div class="hud-stats"><span>◆ <b id="coinText">0</b></span><span>★ <b id="scoreText">0</b></span><span id="speedText">6.8×</span><button class="pause" data-action="pause">Ⅱ</button></div>
+    </div>
+    <div id="tutorial" class="tutorial">PULE NO RITMO DOS BLOCOS</div>
+    <div id="toast" class="toast hidden"></div>
+    <div id="pause" class="modal hidden">
+      <div class="modal-card"><div class="micro">NEON RUSH</div><h2>PAUSADO</h2><button class="btn btn-main" data-action="resume">CONTINUAR</button><button class="btn" data-action="restart">REINICIAR</button><button class="btn" data-action="levels">SAIR PARA FASES</button></div>
+    </div>
+    <div id="result" class="modal hidden">
+      <div class="modal-card"><div id="resultKicker" class="micro">RESULTADO</div><h2 id="resultTitle">VOCÊ VENCEU!</h2><p id="resultText"></p><button id="nextBtn" class="btn btn-main">PRÓXIMA FASE</button><button class="btn" data-action="levels">SELECIONAR FASE</button></div>
+    </div>
+  </section>
+</div>
+<script src="game.js"></script>
 </body>
 </html>
