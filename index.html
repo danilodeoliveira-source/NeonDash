@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>NEON RUSH — Rhythm Runner</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="gameRoot">
+    <section id="menu" class="screen active">
+      <div class="brand-wrap">
+        <div class="brand">NEON RUSH</div>
+        <div class="tagline">RHYTHM • SPEED • REACTION</div>
+      </div>
+      <div class="menu-panel">
+        <button class="menu-btn primary" data-action="play">JOGAR</button>
+        <button class="menu-btn" data-action="levels">SELECIONAR FASE</button>
+        <button class="menu-btn" data-action="settings">CONFIGURAÇÕES</button>
+      </div>
+      <div class="menu-tip">ESPAÇO / CLIQUE / TOQUE = PULAR • SHIFT = DASH • R = REINICIAR</div>
+    </section>
+
+    <section id="levels" class="screen hidden">
+      <header class="page-head"><button class="back" data-action="menu">← MENU</button><div><div class="eyebrow">NEON RUSH</div><h1>SELECIONAR FASE</h1></div><div class="best" id="bestSummary"></div></header>
+      <div id="levelGrid" class="level-grid"></div>
+    </section>
+
+    <section id="settings" class="screen hidden">
+      <header class="page-head"><button class="back" data-action="menu">← MENU</button><div><div class="eyebrow">NEON RUSH</div><h1>CONFIGURAÇÕES</h1></div><div></div></header>
+      <div class="settings-panel">
+        <label>VOLUME <input id="volumeSlider" type="range" min="0" max="1" step="0.05" value="0.35"></label>
+        <label>EFEITOS <input id="sfxToggle" type="checkbox" checked></label>
+        <label>PARTÍCULAS <input id="particlesToggle" type="checkbox" checked></label>
+        <label>EFEITO DE TELA <input id="shakeToggle" type="checkbox" checked></label>
+        <button class="menu-btn" data-action="resetSave">RESETAR PROGRESSO</button>
+      </div>
+    </section>
+
+    <section id="game" class="screen hidden game-screen">
+      <canvas id="canvas" aria-label="Neon Rush"></canvas>
+      <div class="hud">
+        <div class="hud-left"><div id="levelLabel">FASE 1 — PULSO ZERO</div><div class="bar"><i id="progressBar"></i></div></div>
+        <div class="hud-center" id="progressText">0%</div>
+        <div class="hud-right"><span>◆ <b id="coinHud">0</b></span><span>★ <b id="scoreHud">0</b></span><button class="pause-btn" data-action="pause">Ⅱ</button></div>
+      </div>
+      <div id="gameMessage" class="game-message hidden"></div>
+      <div id="pauseOverlay" class="overlay hidden">
+        <div class="overlay-card"><div class="eyebrow">NEON RUSH</div><h2>PAUSADO</h2><button class="menu-btn primary" data-action="resume">CONTINUAR</button><button class="menu-btn" data-action="restart">REINICIAR</button><button class="menu-btn" data-action="levels">SAIR PARA FASES</button></div>
+      </div>
+    </section>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
