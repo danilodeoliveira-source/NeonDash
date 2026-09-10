@@ -38,34 +38,54 @@
   addEventListener('pointerup',releaseJump);
   canvas.addEventListener('contextmenu',e=>e.preventDefault());
 
-  const world={active:false,paused:false,level:0,camera:0,time:0,player:{y:0,vy:0,rot:0,mode:'cube',grav:1,onGround:false},dead:false,deadTimer:0,ground:0,objects:[],coins:[],portals:[],pads:[],particles:[],collected:0,score:0,beat:0,last:0,flash:0,shipHold:false};
+  const world={active:false,paused:false,level:0,camera:0,time:0,player:{y:0,vy:0,rot:0,mode:'cube',grav:1,onGround:false},dead:false,deadTimer:0,ground:0,objects:[],coins:[],portals:[],pads:[],particles:[],collected:0,score:0,beat:0,last:0,flash:0,shipHold:false,dashQueued:false,dashTime:0,dashCooldown:0,shake:0};
   function rng(seed){let s=(seed|0)+12345;return()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296}}
   function buildLevel(i){
-    const L=LEVELS[i],r=rng(L.seed);
-    world.level=i;world.camera=0;world.time=0;world.ground=H*.77;world.player.y=world.ground-34;world.player.vy=0;world.player.rot=0;world.player.mode='cube';world.player.grav=1;world.player.onGround=true;world.active=true;world.paused=false;world.dead=false;world.deadTimer=0;world.objects=[];world.coins=[];world.portals=[];world.pads=[];world.particles=[];world.collected=0;world.score=0;world.beat=0;world.flash=0;world.shipHold=false;
-    const spike=(x,n=1)=>{for(let k=0;k<n;k++)world.objects.push({x:x+k*34,w:34,h:42,type:'spike'})};
+    const L=LEVELS[i];
+    world.level=i;world.camera=0;world.time=0;world.ground=H*.78;
+    world.player.y=world.ground-34;world.player.vy=0;world.player.rot=0;world.player.mode='cube';world.player.grav=1;world.player.onGround=true;world.player.trail=[];
+    world.active=true;world.paused=false;world.dead=false;world.deadTimer=0;world.objects=[];world.coins=[];world.portals=[];world.pads=[];world.particles=[];world.collected=0;world.score=0;world.beat=0;world.flash=0;world.shake=0;world.dashQueued=false;world.dashTime=0;world.dashCooldown=0;
+    const spike=(x,n=1)=>{for(let k=0;k<n;k++)world.objects.push({x:x+k*31,w:31,h:42,type:'spike'})};
     const block=(x,y,w,h)=>world.objects.push({x,y,w,h,type:'block'});
     const coin=(x,y,big=false)=>world.coins.push({x,y,big,taken:false});
-    const pad=(x,type='jump')=>world.pads.push({x,type,used:false});
+    const pad=(x)=>world.pads.push({x,type:'jump',used:false});
     const portal=(x,type)=>world.portals.push({x,type,used:false});
-    let x=620;
-    while(x<L.length-700){
-      const p=Math.floor(r()*12);
-      if(p===0){spike(x);spike(x+120);coin(x+58,world.ground-160)}
-      if(p===1){spike(x,2);coin(x+70,world.ground-150);}
-      if(p===2){block(x,world.ground-88,120,88);spike(x+130);coin(x+45,world.ground-145)}
-      if(p===3){block(x,world.ground-140,44,140);block(x+115,world.ground-95,44,95);coin(x+73,world.ground-225,true)}
-      if(p===4){pad(x,'jump');spike(x+105,2);coin(x+35,world.ground-170)}
-      if(p===5){block(x,world.ground-105,42,105);block(x+88,world.ground-105,42,105);spike(x+42);coin(x+64,world.ground-185)}
-      if(p===6){portal(x+20,'gravity');spike(x+80,2);coin(x+35,world.ground+90)}
-      if(p===7){portal(x+20,'cube');block(x+95,world.ground-125,44,125);spike(x+140,2);coin(x+110,world.ground-205)}
-      if(p===8){portal(x+20,'ship');coin(x+75,world.ground-245);coin(x+140,world.ground-295);}
-      if(p===9){if(i<2)spike(x,3);else{block(x,world.ground-60,170,60);spike(x+56);spike(x+112)}coin(x+28,world.ground-145)}
-      if(p===10){block(x,world.ground-75,70,75);pad(x+22,'jump');block(x+105,world.ground-135,70,135);coin(x+128,world.ground-210)}
-      if(p===11){portal(x+30,'cube');spike(x+96);spike(x+175);coin(x+125,world.ground-145,true)}
-      x += 230 + Math.floor(r()*190);
+    // Hand-authored, deterministic first level: generous timing windows and no blind jumps.
+    // Phase 1 is deliberately hand-timed so holding the button can clear it reliably.
+    if(i===0){
+      const speedPx=L.speed*60;
+      const jumpT=2*760/2200;
+      let t=jumpT+0.2, n=0;
+      while(t < L.length/speedPx-1.2){
+        const wx=speedPx*t;
+        // Safe mid-air timing: holding the button continuously can clear every obstacle.
+        spike(wx,1);
+        coin(wx+56,world.ground-145,n%5===0);
+        t += jumpT; n++;
+      }
+      coin(L.length-360,world.ground-165,true);
+    } else {
+      let x=700;
+      const patterns=[
+      ()=>{spike(x);coin(x+48,world.ground-118);x+=260},
+      ()=>{spike(x,2);coin(x+62,world.ground-138);x+=300},
+      ()=>{block(x,world.ground-72,86,72);coin(x+42,world.ground-145);x+=290},
+      ()=>{pad(x);spike(x+115);coin(x+54,world.ground-165,true);x+=310},
+      ()=>{spike(x);pad(x+50);spike(x+135);coin(x+78,world.ground-175);x+=340},
+      ()=>{block(x,world.ground-70,72,70);block(x+118,world.ground-70,72,70);coin(x+95,world.ground-150);x+=340},
+      ()=>{portal(x,'gravity');x+=370},
+      ()=>{portal(x,'gravity');spike(x+135);coin(x+75,world.ground+105,true);x+=390},
+      ()=>{portal(x,'cube');block(x+100,world.ground-82,82,82);spike(x+210);coin(x+140,world.ground-170);x+=380},
+      ()=>{portal(x,'ship');coin(x+105,world.ground-225);coin(x+210,world.ground-260,true);x+=430},
+      ()=>{portal(x,'cube');spike(x+120,2);coin(x+80,world.ground-155);x+=360},
+      ()=>{block(x,world.ground-58,170,58);spike(x+62);spike(x+124);coin(x+88,world.ground-150,true);x+=390}
+    ];
+    let idx=0;
+    while(x<L.length-650){patterns[idx%patterns.length]();idx++;}
+    coin(L.length-360,world.ground-165,true);
     }
-    coin(L.length-400,world.ground-180,true);
+    $('#levelTitle').textContent=`FASE ${i+1} — ${L.name}`;
+    $('#tutorial').textContent=i===0?'SEGURE ESPAÇO / CLIQUE PARA PULAR AUTOMATICAMENTE':'SEGURE PARA ENCADEAR OS PULOS';
     updateHUD();
   }
 
@@ -82,9 +102,11 @@
     if(!world.active||world.paused)return;
     if(world.dead){world.deadTimer-=dt;world.flash=Math.max(0,world.flash-dt);updateParticles(dt);if(world.deadTimer<=0)restart();return}
     const L=LEVELS[world.level],p=world.player;
-    world.time+=dt;world.beat=Math.sin(world.time*10.0)*0.5+0.5;world.camera+=L.speed*60*dt;world.flash=Math.max(0,world.flash-dt);
-    if(input.jump){input.jump=false;if(p.mode==='cube'&&p.onGround){p.vy=-690*p.grav;p.onGround=false;beep(520,.05)}else if(p.mode==='ship'){beep(420,.035)}}
-    if(p.mode==='ship'){world.shipHold=input.held;p.vy += (world.shipHold?-900:720)*dt*p.grav}else p.vy += 2100*dt*p.grav;
+    world.dashCooldown=Math.max(0,world.dashCooldown-dt);world.dashTime=Math.max(0,world.dashTime-dt);
+    if(world.dashQueued&&world.dashCooldown<=0){world.dashQueued=false;world.dashTime=.22;world.dashCooldown=1.1;world.shake=7;burst(px()+12,p.y+17,L.colors[0],18);beep(740,.08,'sawtooth',.04)}
+    world.time+=dt;world.beat=Math.sin(world.time*11.5)*0.5+0.5;world.camera+=L.speed*60*(world.dashTime>0?1.35:1)*dt;world.flash=Math.max(0,world.flash-dt);world.shake=Math.max(0,world.shake-dt*20);
+    if(p.mode==='cube' && p.onGround && (input.jump||input.held)){input.jump=false;p.vy=-760*p.grav;p.onGround=false;world.flash=.08;world.shake=Math.max(world.shake,3);burst(px(),p.y+17,L.colors[0],8);beep(520,.045)} else if(p.mode==='ship' && input.jump){input.jump=false;beep(420,.035)}
+    if(p.mode==='ship'){world.shipHold=input.held;p.vy += (world.shipHold?-900:720)*dt*p.grav}else p.vy += 2200*dt*p.grav;
     p.y += p.vy*dt;
     if(p.grav>0){if(p.y>=world.ground-34){p.y=world.ground-34;p.vy=0;p.onGround=true}else p.onGround=false;if(p.y>H+80)die()}
     else{if(p.y<=60){p.y=60;p.vy=0;p.onGround=true}else p.onGround=false;if(p.y<-70)die()}
@@ -103,14 +125,14 @@
 
   function draw(){
     const L=LEVELS[world.level]||LEVELS[0];
-    ctx.save();drawBackground(L);drawDecor(L);drawObjects(L);drawCoins(L);drawPlayer(L);drawParticles();ctx.restore();
+    const ox=world.shake?(Math.random()-.5)*world.shake:0,oy=world.shake?(Math.random()-.5)*world.shake:0;ctx.save();ctx.translate(ox,oy);drawBackground(L);drawDecor(L);drawObjects(L);drawCoins(L);drawPlayer(L);drawParticles();ctx.restore();
     if(world.flash>0){ctx.fillStyle=`rgba(255,255,255,${world.flash*.45})`;ctx.fillRect(0,0,W,H)}
   }
   function drawBackground(L){
     const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#07091b');g.addColorStop(.62,'#080c2a');g.addColorStop(1,'#111a38');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
     ctx.globalAlpha=.1;ctx.strokeStyle=L.colors[0];ctx.lineWidth=1;const ox=-((world.camera*.35)%80),oy=90;for(let x=ox;x<W+80;x+=80){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,oy);ctx.stroke()}for(let y=oy;y<H;y+=80){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}ctx.globalAlpha=1;
     for(let i=0;i<12;i++){const x=((i*170-world.camera*.08)% (W+260))-130;const h=80+(i%5)*24;ctx.fillStyle=i%2?'#0c1330':'#0e1738';ctx.fillRect(x,world.ground-100-h,90,h);ctx.fillRect(x+26,world.ground-100-h-22,30,22)}
-    const glow=.04+world.beat*.035;ctx.globalAlpha=glow;ctx.fillStyle=L.colors[0];ctx.beginPath();ctx.arc(W*.52,H*.32,260,0,TAU);ctx.fill();ctx.globalAlpha=1;
+    const glow=.08+world.beat*.06;ctx.globalAlpha=glow;ctx.fillStyle=L.colors[0];ctx.beginPath();ctx.arc(W*.52,H*.32,260,0,TAU);ctx.fill();ctx.globalAlpha=1;
   }
   function drawDecor(L){
     ctx.fillStyle='#111a35';ctx.fillRect(0,world.ground,W,H-world.ground);
@@ -123,7 +145,19 @@
     for(const po of world.portals){const sx=po.x-world.camera+px();if(sx<-60||sx>W+60)continue;ctx.strokeStyle=po.type==='gravity'?L.colors[1]:L.colors[0];ctx.lineWidth=5;ctx.shadowColor=ctx.strokeStyle;ctx.shadowBlur=18;ctx.beginPath();ctx.arc(sx,world.ground-125,28+world.beat*3,0,TAU);ctx.stroke();ctx.shadowBlur=0;ctx.fillStyle='#fff';ctx.font='bold 10px ui-monospace,monospace';ctx.textAlign='center';ctx.fillText(po.type==='ship'?'SHIP':po.type==='gravity'?'GRAV':'CUBE',sx,world.ground-120);ctx.textAlign='left'}
   }
   function drawCoins(L){for(const c of world.coins){if(c.taken)continue;const sx=c.x-world.camera+px();if(sx<-40||sx>W+40)continue;const y=c.y;const r=c.big?13:9;ctx.save();ctx.translate(sx,y);ctx.rotate(world.time*2);ctx.strokeStyle=L.colors[1];ctx.lineWidth=4;ctx.shadowColor=L.colors[1];ctx.shadowBlur=15;ctx.beginPath();ctx.arc(0,0,r,0,TAU);ctx.stroke();ctx.shadowBlur=0;ctx.restore()}}
-  function drawPlayer(L){const p=world.player,s=34,x=px();ctx.save();ctx.translate(x,p.y+17);ctx.rotate(p.rot);ctx.shadowColor=L.colors[0];ctx.shadowBlur=18;ctx.fillStyle='#f5f8ff';ctx.fillRect(-s/2,-s/2,s,s);ctx.shadowBlur=0;ctx.fillStyle=L.colors[1];ctx.fillRect(-8,-8,16,16);ctx.strokeStyle=L.colors[0];ctx.lineWidth=3;ctx.strokeRect(-s/2+2,-s/2+2,s-4,s-4);ctx.fillStyle='#071126';ctx.fillRect(-10,-5,5,5);ctx.fillRect(5,-5,5,5);ctx.restore();if(p.mode==='ship'){ctx.strokeStyle=L.colors[0];ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(x+12,p.y+17);ctx.lineTo(x+46,p.y+17);ctx.stroke()}}
+  function drawPlayer(L){const p=world.player,x=px();
+    for(let i=0;i<p.trail.length;i++){const t=p.trail[i];ctx.globalAlpha=(i/p.trail.length)*.16;ctx.fillStyle=L.colors[0];ctx.fillRect(t.x-8,t.y-8,16,16)}ctx.globalAlpha=1;
+    ctx.save();ctx.translate(x,p.y+17);ctx.rotate(p.rot);ctx.shadowColor=L.colors[0];ctx.shadowBlur=24;
+    const s=34, d=8;
+    ctx.fillStyle='#f8fbff';ctx.fillRect(-s/2,-s/2,s,s);
+    ctx.shadowBlur=0;
+    ctx.fillStyle='#d5deeb';ctx.beginPath();ctx.moveTo(s/2,-s/2);ctx.lineTo(s/2+d,-s/2+d);ctx.lineTo(s/2+d,s/2-d);ctx.lineTo(s/2,s/2);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#bdcadb';ctx.beginPath();ctx.moveTo(-s/2,s/2);ctx.lineTo(s/2,s/2);ctx.lineTo(s/2+d,s/2-d);ctx.lineTo(-s/2+d,s/2-d);ctx.closePath();ctx.fill();
+    ctx.strokeStyle=L.colors[0];ctx.lineWidth=3;ctx.strokeRect(-s/2+1.5,-s/2+1.5,s-3,s-3);
+    ctx.fillStyle=L.colors[1];ctx.fillRect(-8,-8,16,16);ctx.fillStyle='#071126';ctx.fillRect(-10,-5,5,5);ctx.fillRect(5,-5,5,5);ctx.restore();
+    if(world.dashTime>0){ctx.strokeStyle=L.colors[0];ctx.lineWidth=6;ctx.globalAlpha=.65;ctx.beginPath();ctx.moveTo(x+12,p.y+17);ctx.lineTo(x+90,p.y+17);ctx.stroke();ctx.globalAlpha=1}
+  }
+
   function drawParticles(){for(const p of world.particles){ctx.globalAlpha=Math.max(0,p.life/.7);ctx.fillStyle=p.col;ctx.fillRect(p.x,p.y,p.size,p.size)}ctx.globalAlpha=1}
 
   function updateHUD(){const L=LEVELS[world.level];const pct=Math.max(0,Math.min(100,Math.floor(world.camera/L.length*100)));$('#progressFill').style.width=pct+'%';$('#progressText').textContent=pct+'%';$('#coinText').textContent=world.collected;$('#scoreText').textContent=world.score;$('#speedText').textContent=(L.speed).toFixed(1)+'×';}
