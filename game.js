@@ -135,7 +135,8 @@
     const glow=.08+world.beat*.06;ctx.globalAlpha=glow;ctx.fillStyle=L.colors[0];ctx.beginPath();ctx.arc(W*.52,H*.32,260,0,TAU);ctx.fill();ctx.globalAlpha=1;
   }
   function drawDecor(L){
-    ctx.fillStyle='#111a35';ctx.fillRect(0,world.ground,W,H-world.ground);
+    ctx.fillStyle='#18264a';ctx.fillRect(0,world.ground,W,H-world.ground);
+    ctx.fillStyle='#243765';ctx.fillRect(0,world.ground-4,W,4);
     ctx.strokeStyle=L.colors[0];ctx.lineWidth=2;ctx.globalAlpha=.45;for(let x=-((world.camera*.7)%56);x<W;x+=56){ctx.beginPath();ctx.moveTo(x,world.ground);ctx.lineTo(x-60,H);ctx.stroke()}ctx.globalAlpha=1;
     ctx.fillStyle='#fff';ctx.font='bold 11px ui-monospace,monospace';ctx.fillText(`FASE ${world.level+1} — ${L.name}`,20,34);
   }
@@ -148,13 +149,13 @@
   function drawPlayer(L){const p=world.player,x=px();
     for(let i=0;i<p.trail.length;i++){const t=p.trail[i];ctx.globalAlpha=(i/p.trail.length)*.16;ctx.fillStyle=L.colors[0];ctx.fillRect(t.x-8,t.y-8,16,16)}ctx.globalAlpha=1;
     ctx.save();ctx.translate(x,p.y+17);ctx.rotate(p.rot);ctx.shadowColor=L.colors[0];ctx.shadowBlur=24;
-    const s=34, d=8;
+    const s=40, d=9;
     ctx.fillStyle='#f8fbff';ctx.fillRect(-s/2,-s/2,s,s);
     ctx.shadowBlur=0;
     ctx.fillStyle='#d5deeb';ctx.beginPath();ctx.moveTo(s/2,-s/2);ctx.lineTo(s/2+d,-s/2+d);ctx.lineTo(s/2+d,s/2-d);ctx.lineTo(s/2,s/2);ctx.closePath();ctx.fill();
     ctx.fillStyle='#bdcadb';ctx.beginPath();ctx.moveTo(-s/2,s/2);ctx.lineTo(s/2,s/2);ctx.lineTo(s/2+d,s/2-d);ctx.lineTo(-s/2+d,s/2-d);ctx.closePath();ctx.fill();
     ctx.strokeStyle=L.colors[0];ctx.lineWidth=3;ctx.strokeRect(-s/2+1.5,-s/2+1.5,s-3,s-3);
-    ctx.fillStyle=L.colors[1];ctx.fillRect(-8,-8,16,16);ctx.fillStyle='#071126';ctx.fillRect(-10,-5,5,5);ctx.fillRect(5,-5,5,5);ctx.restore();
+    ctx.fillStyle=L.colors[1];ctx.fillRect(-9,-9,18,18);ctx.fillStyle='#071126';ctx.fillRect(-11,-5,6,6);ctx.fillRect(5,-5,6,6);ctx.restore();
     if(world.dashTime>0){ctx.strokeStyle=L.colors[0];ctx.lineWidth=6;ctx.globalAlpha=.65;ctx.beginPath();ctx.moveTo(x+12,p.y+17);ctx.lineTo(x+90,p.y+17);ctx.stroke();ctx.globalAlpha=1}
   }
 
@@ -166,11 +167,15 @@
   function togglePause(){if(!world.active)return;world.paused=!world.paused;$('#pause').classList.toggle('hidden',!world.paused)}
   function showResult(text){$('#resultText').textContent=text;showModal('#result')}
   function renderLevels(){const g=$('#levelGrid');g.innerHTML='';LEVELS.forEach((L,i)=>{const open=i<save.unlocked;const c=document.createElement('article');c.className='level-card'+(open?'':' locked');c.innerHTML=`<div><div class="level-num">${String(i+1).padStart(2,'0')}</div><h3>${L.name}</h3><p>${L.difficulty} • ${L.speed.toFixed(1)} velocidade</p></div><div><div class="meta">MELHOR ${save.best[i]||0}% • ◆ ${save.coins[i]||0}/4 • ★ ${save.wins[i]?'CONCLUÍDA':'-'}</div><button class="btn ${open?'btn-main':''}" ${open?'':'disabled'}>${open?'JOGAR':'BLOQUEADA'}</button></div>`;if(open)c.querySelector('button').onclick=()=>startLevel(i);g.appendChild(c)});$('#progressSummary').textContent=`${save.wins.filter(Boolean).length}/${LEVELS.length} concluídas • ★ ${save.stars}`}
-  function startLevel(i){audioOn();buildLevel(i);show('game');beep(440,.05)}
+  function startLevel(i){audioOn();show('game');requestAnimationFrame(()=>{resize();buildLevel(i);world.last=performance.now();beep(440,.05)});}
 
   document.addEventListener('click',e=>{const a=e.target.closest('[data-action]')?.dataset.action;if(!a)return;audioOn();if(a==='play')startLevel(Math.min(save.unlocked-1,LEVELS.length-1));else if(a==='levels'){world.active=false;show('levels');renderLevels()}else if(a==='settings')show('settings');else if(a==='menu'){world.active=false;hide('#pause');hide('#result');show('menu')}else if(a==='pause')togglePause();else if(a==='resume')togglePause();else if(a==='restart')restart();else if(a==='reset'){localStorage.removeItem(SAVE_KEY);save.unlocked=1;save.best.fill(0);save.coins.fill(0);save.wins.fill(false);save.stars=0;renderLevels()}});
   $('#nextBtn').onclick=()=>{hide('#result');if(world.level+1<LEVELS.length)startLevel(world.level+1);else{show('levels');renderLevels()}};
 
   function loop(t){const dt=Math.min(.033,(t-(world.last||t))/1000);world.last=t;update(dt);draw();requestAnimationFrame(loop)}
   renderLevels();show('menu');requestAnimationFrame(loop);
+  // Keep the canvas in sync after switching from hidden menu to visible gameplay.
+  addEventListener('visibilitychange',()=>{if(!document.hidden)requestAnimationFrame(resize)});
+  new ResizeObserver(()=>requestAnimationFrame(resize)).observe(canvas);
+
 })();
